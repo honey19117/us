@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Us.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: rgba(23, 32, 54, 0.7);
+      --border: rgba(255, 255, 255, 0.1);
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --primary: #ec4899;
+      --primary-gradient: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+      --accent: #6366f1;
+      --success: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(236, 72, 153, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.15) 0px, transparent 50%);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-text {
+      font-size: 24px;
+      font-weight: 700;
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--success);
+      box-shadow: 0 0 10px var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+
+    .room-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .room-title {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .room-bar {
+      display: flex;
+      gap: 10px;
+    }
+
+    .room-input {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 15px;
+      color: #fff;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .room-input:focus {
+      border-color: var(--primary);
+    }
+
+    .btn {
+      background: var(--primary-gradient);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 20px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.15s, opacity 0.2s;
+      font-family: inherit;
+    }
+
+    .btn:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      color: #fff;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .content-box {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 280px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .messages {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      max-height: 320px;
+      padding-right: 4px;
+    }
+
+    .msg {
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 14px;
+      max-width: 80%;
+      word-wrap: break-word;
+      line-height: 1.5;
+    }
+
+    .msg.me {
+      align-self: flex-end;
+      background: var(--primary-gradient);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .msg.them {
+      align-self: flex-start;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-bottom-left-radius: 4px;
+    }
+
+    .msg.system {
+      align-self: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      background: rgba(0, 0, 0, 0.2);
+      padding: 4px 12px;
+      border-radius: 9999px;
+    }
+
+    .chat-bar {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .chat-input {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: white;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .chat-input:focus {
+      border-color: var(--accent);
+    }
+
+    .reactions {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 4px;
+    }
+
+    .react-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      padding: 6px 14px;
+      cursor: pointer;
+      font-size: 18px;
+      transition: transform 0.15s, background 0.15s;
+    }
+
+    .react-btn:hover {
+      transform: scale(1.15);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .info-footer {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      background: #10b981;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <span class="logo-text">Us.</span>
+      </div>
+      <div class="status-badge" id="statusBadge">
+        <span class="status-dot"></span>
+        <span id="statusText">24/7 Online (Netlify)</span>
+      </div>
+    </header>
+
+    <div class="room-card">
+      <div class="room-title">Active Room Code</div>
+      <div class="room-bar">
+        <input type="text" id="roomInput" class="room-input" readonly />
+        <button class="btn btn-secondary" onclick="copyLink()">📋 Copy Link</button>
+        <button class="btn" onclick="generateNewRoom()">✨ New Room</button>
+      </div>
+    </div>
+
+    <div class="content-box">
+      <div class="messages" id="messagesContainer">
+        <div class="msg system">Connected to Netlify. 24/7 ready!</div>
+        <div class="msg them">Welcome to Us! Share the link or room code with each other to connect in real time.</div>
+      </div>
+
+      <div class="reactions">
+        <button class="react-btn" onclick="sendReaction('❤️')">❤️</button>
+        <button class="react-btn" onclick="sendReaction('✨')">✨</button>
+        <button class="react-btn" onclick="sendReaction('🎈')">🎈</button>
+        <button class="react-btn" onclick="sendReaction('☕')">☕</button>
+        <button class="react-btn" onclick="sendReaction('🎶')">🎶</button>
+      </div>
+
+      <div class="chat-bar">
+        <input type="text" id="msgInput" class="chat-input" placeholder="Type a message..." onkeydown="handleKey(event)" />
+        <button class="btn" onclick="sendMsg()">Send</button>
+      </div>
+    </div>
+
+    <div class="info-footer">
+      <span>⚡ Running 24/7 on Netlify. Works even when either PC is off.</span>
+      <span>Repo: <a href="https://github.com/honey19117/us" target="_blank" style="color: #a78bfa; text-decoration: none;">github.com/honey19117/us</a></span>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Link copied to clipboard!</div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    let roomId = urlParams.get('room');
+
+    if (!roomId) {
+      roomId = 'MINE6N';
+      window.history.replaceState({}, '', `?room=${roomId}`);
+    }
+
+    const roomInput = document.getElementById('roomInput');
+    roomInput.value = roomId;
+
+    function showToast(text) {
+      const t = document.getElementById('toast');
+      t.innerText = text;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    function copyLink() {
+      navigator.clipboard.writeText(window.location.href);
+      showToast('Room link copied! Share with your friend.');
+    }
+
+    function generateNewRoom() {
+      const rand = Math.random().toString(36).substring(2, 8).toUpperCase();
+      window.location.search = `?room=${rand}`;
+    }
+
+    function addMsg(text, type = 'them') {
+      const container = document.getElementById('messagesContainer');
+      const div = document.createElement('div');
+      div.className = `msg ${type}`;
+      div.innerText = text;
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // PeerJS Connection Setup
+    const myPeerId = `${roomId}-${Math.random().toString(36).substring(2, 7)}`;
+    const peer = new Peer(myPeerId);
+    let activeConn = null;
+
+    peer.on('open', (id) => {
+      console.log('My Peer ID is: ' + id);
+      document.getElementById('statusText').innerText = 'Online (Ready)';
+    });
+
+    peer.on('connection', (conn) => {
+      activeConn = conn;
+      setupConnectionHandlers(conn);
+      addMsg('A partner connected to this room! 🎉', 'system');
+    });
+
+    function setupConnectionHandlers(conn) {
+      conn.on('data', (data) => {
+        if (data.type === 'chat') {
+          addMsg(data.text, 'them');
+        } else if (data.type === 'reaction') {
+          showToast(`Partner sent ${data.emoji}!`);
+          addMsg(`Sent ${data.emoji}`, 'them');
+        }
+      });
+      conn.on('close', () => {
+        addMsg('Partner disconnected.', 'system');
+      });
+    }
+
+    function sendMsg() {
+      const input = document.getElementById('msgInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      addMsg(text, 'me');
+      input.value = '';
+
+      if (activeConn && activeConn.open) {
+        activeConn.send({ type: 'chat', text: text });
+      }
+    }
+
+    function sendReaction(emoji) {
+      addMsg(emoji, 'me');
+      if (activeConn && activeConn.open) {
+        activeConn.send({ type: 'reaction', emoji: emoji });
+      }
+    }
+
+    function handleKey(e) {
+      if (e.key === 'Enter') sendMsg();
+    }
+  </script>
+</body>
+</html>
