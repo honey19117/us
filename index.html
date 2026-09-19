@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -222,19 +222,19 @@
       gap: 14px;
       text-align: center;
       padding: 24px;
-      max-width: 380px;
+      max-width: 400px;
       z-index: 1;
     }
 
     .avatar-circle {
-      width: 80px;
-      height: 80px;
+      width: 84px;
+      height: 84px;
       border-radius: 50%;
       background: var(--gradient-pink);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 32px;
+      font-size: 34px;
       font-weight: 700;
       color: white;
       box-shadow: 0 0 30px rgba(236, 72, 153, 0.35);
@@ -243,11 +243,11 @@
 
     @keyframes gentle-pulse {
       0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
+      50% { transform: scale(1.06); }
     }
 
     .placeholder-title {
-      font-size: 16px;
+      font-size: 17px;
       font-weight: 700;
       color: #f1f5f9;
     }
@@ -256,6 +256,25 @@
       font-size: 13px;
       color: var(--text-dim);
       line-height: 1.5;
+    }
+
+    .reconnect-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--card-border);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+
+    .reconnect-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
     }
 
     /* CONTROLS DOCK */
@@ -542,7 +561,7 @@
 
     <div class="status-indicator">
       <span class="dot" id="statusDot"></span>
-      <span id="statusText">Connecting...</span>
+      <span id="statusText">Starting Camera...</span>
     </div>
   </header>
 
@@ -564,9 +583,12 @@
         
         <div class="placeholder-view" id="remotePlaceholder">
           <div class="avatar-circle">❤️</div>
-          <div class="placeholder-title">Waiting for your partner...</div>
-          <div class="placeholder-sub">Send them the room link! As soon as they open the link, video & voice will connect automatically.</div>
-          <button class="send-btn" style="padding: 8px 18px; border-radius: 9999px;" onclick="copyRoomLink()">📋 Copy Room Link</button>
+          <div class="placeholder-title" id="remotePlaceholderTitle">Waiting for partner...</div>
+          <div class="placeholder-sub" id="remotePlaceholderSub">Send this link to your partner! Video & Voice will start automatically as soon as they open the link.</div>
+          <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <button class="send-btn" style="padding: 10px 20px; border-radius: 9999px;" onclick="copyRoomLink()">📋 Copy Room Link</button>
+            <button class="reconnect-btn" onclick="manualReconnect()">🔄 Re-detect Partner</button>
+          </div>
         </div>
 
         <div class="video-overlay" id="remoteOverlay" style="display: none;">
@@ -635,6 +657,11 @@
 
   <div id="toast" class="toast">Link copied!</div>
 
+  <!-- Audio unlock banner for mobile/Chrome policies -->
+  <div id="audioUnlock" style="display:none; position:fixed; bottom:100px; left:50%; transform:translateX(-50%); background:#8b5cf6; color:white; padding:10px 20px; border-radius:9999px; z-index:999; font-weight:700; cursor:pointer;" onclick="unlockAudio()">
+    🔊 Click here to enable partner audio!
+  </div>
+
   <script>
     // 1. ROOM SETUP
     const urlParams = new URLSearchParams(window.location.search);
@@ -651,13 +678,18 @@
     let isScreenSharing = false;
     let isMicMuted = false;
     let isCamOff = false;
+    let peer = null;
     let activeCall = null;
     let activeDataConn = null;
+    let partnerPeerId = null;
     let unreadCount = 0;
     let isChatOpen = true;
+    let heartbeatInterval = null;
 
-    const myPeerId = 'us_' + roomId + '_' + Math.random().toString(36).substring(2, 9);
-    console.log('[Us] My Peer ID:', myPeerId);
+    // Unique peer ID for this tab
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    const myPeerId = `us_${roomId}_${randomSuffix}`;
+    console.log('[Us] Starting with Peer ID:', myPeerId);
 
     // 3. UI ELEMENTS
     const localVideo = document.getElementById('localVideo');
@@ -669,65 +701,100 @@
     const statusText = document.getElementById('statusText');
     const unreadBadge = document.getElementById('unreadBadge');
 
-    // 4. GET USER MEDIA (Camera + Mic)
-    async function startMedia() {
+    // 4. GUARANTEED MEDIA INITIALIZATION
+    async function initMedia() {
       try {
         localStream = await navigator.mediaDevices.getUserMedia({
           video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
           audio: { echoCancellation: true, noiseSuppression: true }
         });
       } catch (err) {
-        console.warn("Camera failed, trying audio only:", err);
+        console.warn("[Media] Full camera/mic failed, trying audio only:", err);
         try {
           localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        } catch (e) {
-          console.error("No media devices available:", e);
-          localStream = new MediaStream();
+        } catch (e2) {
+          console.warn("[Media] No camera or mic available, creating synthetic stream:", e2);
+          const canvas = document.createElement('canvas');
+          canvas.width = 640;
+          canvas.height = 480;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#0f172a';
+          ctx.fillRect(0, 0, 640, 480);
+          const vTrack = canvas.captureStream(5).getVideoTracks()[0];
+
+          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = audioCtx.createOscillator();
+          const dst = audioCtx.createMediaStreamDestination();
+          osc.connect(dst);
+          const aTrack = dst.stream.getAudioTracks()[0];
+          aTrack.enabled = false;
+
+          localStream = new MediaStream([vTrack, aTrack]);
         }
       }
+
       localVideo.srcObject = localStream;
+      localVideo.muted = true;
+      try { await localVideo.play(); } catch (_) {}
+      console.log("[Media] Local stream ready with", localStream.getTracks().length, "tracks");
     }
 
-    // 5. PEERJS & MQTT SIGNALING SETUP
-    const peer = new Peer(myPeerId, {
+    // 5. PEERJS CONFIGURATION WITH MULTIPLE RELIABLE STUN SERVERS
+    const peerConfig = {
       debug: 1,
       config: {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
           { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' },
+          { urls: 'stun:stun3.l.google.com:19302' },
+          { urls: 'stun:stun4.l.google.com:19302' },
+          { urls: 'stun:stun.cloudflare.com:3478' },
           { urls: 'stun:global.stun.twilio.com:3478' }
         ]
       }
-    });
+    };
 
-    peer.on('open', (id) => {
-      console.log('[PeerJS] Ready with ID:', id);
-      statusText.innerText = 'Waiting for partner...';
-      connectMqttSignaling();
-    });
+    function startPeer() {
+      peer = new Peer(myPeerId, peerConfig);
 
-    peer.on('call', (call) => {
-      console.log('[PeerJS] Incoming call from:', call.peer);
-      activeCall = call;
-      const streamToSend = isScreenSharing && screenStream ? screenStream : localStream;
-      call.answer(streamToSend);
-      handleCallStream(call);
-    });
+      peer.on('open', (id) => {
+        console.log('[PeerJS] Online as:', id);
+        statusText.innerText = 'Waiting for partner...';
+        startSignaling();
+      });
 
-    peer.on('connection', (conn) => {
-      console.log('[PeerJS] Data connection from:', conn.peer);
-      activeDataConn = conn;
-      setupDataHandlers(conn);
-    });
+      // Handle Incoming Call (Polite Callee)
+      peer.on('call', (call) => {
+        console.log('[PeerJS] Incoming call from:', call.peer);
+        partnerPeerId = call.peer;
+        activeCall = call;
 
-    peer.on('error', (err) => {
-      console.warn('[PeerJS] Error:', err);
-    });
+        const streamToSend = (isScreenSharing && screenStream) ? screenStream : localStream;
+        call.answer(streamToSend);
+        attachCallEvents(call);
+      });
 
-    function handleCallStream(call) {
-      call.on('stream', (stream) => {
-        console.log('[PeerJS] Received remote stream');
-        remoteVideo.srcObject = stream;
+      // Handle Incoming Data Connection
+      peer.on('connection', (conn) => {
+        console.log('[PeerJS] Data connection established with:', conn.peer);
+        activeDataConn = conn;
+        partnerPeerId = conn.peer;
+        attachDataEvents(conn);
+      });
+
+      peer.on('error', (err) => {
+        console.error('[PeerJS] Error:', err);
+        if (err.type === 'peer-unavailable') {
+          console.log('[PeerJS] Partner was momentarily unavailable, will retry...');
+        }
+      });
+    }
+
+    function attachCallEvents(call) {
+      call.on('stream', (remoteStream) => {
+        console.log('[PeerJS] Stream received from partner! Tracks:', remoteStream.getTracks().length);
+        remoteVideo.srcObject = remoteStream;
         remoteVideo.style.display = 'block';
         remotePlaceholder.style.display = 'none';
         remoteOverlay.style.display = 'flex';
@@ -736,16 +803,33 @@
         statusDot.classList.add('connected');
         statusText.innerText = 'Connected 🟢';
         showToast('Partner connected! 🎉');
+
+        remoteVideo.play().catch(e => {
+          console.warn('[Autoplay] Blocked by browser:', e);
+          document.getElementById('audioUnlock').style.display = 'block';
+        });
       });
 
       call.on('close', () => {
-        handlePartnerLeft();
+        onPartnerDisconnected();
       });
+
+      if (call.peerConnection) {
+        call.peerConnection.onconnectionstatechange = () => {
+          console.log('[WebRTC State]:', call.peerConnection.connectionState);
+          if (call.peerConnection.connectionState === 'connected') {
+            statusDot.classList.add('connected');
+            statusText.innerText = 'Connected 🟢';
+          } else if (call.peerConnection.connectionState === 'disconnected' || call.peerConnection.connectionState === 'failed') {
+            onPartnerDisconnected();
+          }
+        };
+      }
     }
 
-    function setupDataHandlers(conn) {
+    function attachDataEvents(conn) {
       conn.on('open', () => {
-        console.log('[DataConn] Channel opened');
+        console.log('[DataChannel] Open! Syncing status...');
         conn.send({ type: 'status_sync', mic: !isMicMuted, cam: !isCamOff });
       });
 
@@ -760,23 +844,25 @@
       });
 
       conn.on('close', () => {
-        handlePartnerLeft();
+        onPartnerDisconnected();
       });
     }
 
-    function handlePartnerLeft() {
+    function onPartnerDisconnected() {
       remoteVideo.style.display = 'none';
       remotePlaceholder.style.display = 'flex';
       remoteOverlay.style.display = 'none';
       remoteCard.classList.add('waiting');
       statusDot.classList.remove('connected');
-      statusText.innerText = 'Partner left / Waiting...';
-      showToast('Partner disconnected.');
+      statusText.innerText = 'Partner disconnected / Waiting...';
+      activeCall = null;
+      activeDataConn = null;
+      partnerPeerId = null;
     }
 
-    // 6. MQTT SIGNALING (Instantly finds each other in room)
-    function connectMqttSignaling() {
-      const topic = `us_app_v2/rooms/${roomId}`;
+    // 6. SIGNALING WITH DETERMINISTIC ROLE NEGOTIATION (PREVENTS GLARE / COLLISION)
+    function startSignaling() {
+      const topic = `us_app_v3/rooms/${roomId}`;
       const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
         clientId: 'us_mqtt_' + myPeerId,
         clean: true,
@@ -784,47 +870,84 @@
       });
 
       client.on('connect', () => {
-        console.log('[MQTT] Connected to signaling broker');
-        client.subscribe(topic, () => {
-          client.publish(topic, JSON.stringify({ type: 'announce', peerId: myPeerId }));
-        });
+        console.log('[MQTT] Connected to signaling channel:', topic);
+        client.subscribe(topic);
+
+        // Announce presence immediately
+        announcePresence(client, topic);
+
+        // Heartbeat announce every 3 seconds to guarantee detection even if one joins late
+        if (heartbeatInterval) clearInterval(heartbeatInterval);
+        heartbeatInterval = setInterval(() => {
+          if (!activeCall || !activeCall.open) {
+            announcePresence(client, topic);
+          }
+        }, 3000);
       });
 
       client.on('message', (t, payload) => {
         try {
           const msg = JSON.parse(payload.toString());
-          if (msg.peerId === myPeerId) return; // Ignore own messages
+          if (msg.peerId === myPeerId) return; // Ignore self
 
-          if (msg.type === 'announce') {
-            console.log('[MQTT] Partner announced:', msg.peerId);
-            client.publish(topic, JSON.stringify({ type: 'ack', peerId: myPeerId, target: msg.peerId }));
-            initiateCall(msg.peerId);
-          } else if (msg.type === 'ack' && msg.target === myPeerId) {
-            console.log('[MQTT] Partner acknowledged:', msg.peerId);
-            initiateCall(msg.peerId);
+          console.log('[MQTT] Received signal from:', msg.peerId);
+
+          // TIE-BREAKER: The peer with the alphabetically LARGER peerId makes the call
+          // This guarantees that BOTH sides NEVER call each other simultaneously!
+          if (myPeerId > msg.peerId) {
+            if (!activeCall || !activeCall.open) {
+              console.log('[Negotiation] I am CALLER for partner:', msg.peerId);
+              callPartner(msg.peerId);
+            }
+          } else {
+            console.log('[Negotiation] I am CALLEE, waiting for call from:', msg.peerId);
           }
         } catch (e) {
-          console.error('[MQTT] Message parsing error:', e);
+          console.error('[MQTT] Parse error:', e);
         }
       });
     }
 
-    function initiateCall(targetPeerId) {
-      if (activeCall && activeCall.open) return; // Already in call
-      console.log('[Call] Calling partner:', targetPeerId);
-      
-      const streamToSend = isScreenSharing && screenStream ? screenStream : localStream;
+    function announcePresence(client, topic) {
+      if (client && client.connected) {
+        client.publish(topic, JSON.stringify({
+          type: 'ping',
+          peerId: myPeerId,
+          ts: Date.now()
+        }));
+      }
+    }
+
+    function callPartner(targetPeerId) {
+      if (activeCall && activeCall.open) return;
+      partnerPeerId = targetPeerId;
+      console.log('[Calling Partner]:', targetPeerId);
+
+      const streamToSend = (isScreenSharing && screenStream) ? screenStream : localStream;
       const call = peer.call(targetPeerId, streamToSend);
       if (call) {
         activeCall = call;
-        handleCallStream(call);
+        attachCallEvents(call);
       }
 
       const conn = peer.connect(targetPeerId);
       if (conn) {
         activeDataConn = conn;
-        setupDataHandlers(conn);
+        attachDataEvents(conn);
       }
+    }
+
+    function manualReconnect() {
+      showToast('Searching for partner in room...');
+      if (peer) {
+        startSignaling();
+      }
+    }
+
+    function unlockAudio() {
+      remoteVideo.muted = false;
+      remoteVideo.play();
+      document.getElementById('audioUnlock').style.display = 'none';
     }
 
     // 7. MIC, CAMERA & SCREEN SHARE CONTROLS
@@ -997,8 +1120,14 @@
       setTimeout(() => toast.classList.remove('show'), 2500);
     }
 
-    // INIT
-    startMedia();
+    // START FLOW: MEDIA FIRST -> THEN PEER & SIGNALING
+    async function startApp() {
+      statusText.innerText = 'Requesting Camera/Mic...';
+      await initMedia();
+      startPeer();
+    }
+
+    startApp();
   </script>
 </body>
 </html>
