@@ -57,7 +57,7 @@
       border-bottom: 1px solid var(--card-border);
       background: rgba(9, 13, 22, 0.85);
       backdrop-filter: blur(12px);
-      z-index: 10;
+      z-index: 20;
     }
 
     .brand {
@@ -154,7 +154,7 @@
       min-height: 0;
     }
 
-    /* NORMAL 50/50 VIEWPORT */
+    /* VIEWPORT CONTAINER */
     .video-viewport {
       flex: 1;
       padding: 16px;
@@ -164,6 +164,8 @@
       position: relative;
       transition: all 0.3s ease;
       min-height: 0;
+      width: 100%;
+      height: 100%;
     }
 
     @media (max-width: 768px) {
@@ -173,6 +175,7 @@
       }
     }
 
+    /* VIDEO CARDS */
     .video-card {
       background: #0f172a;
       border: 1px solid var(--card-border);
@@ -200,8 +203,8 @@
 
     .video-overlay {
       position: absolute;
-      bottom: 16px;
-      left: 16px;
+      bottom: 14px;
+      left: 14px;
       background: rgba(0, 0, 0, 0.65);
       backdrop-filter: blur(8px);
       padding: 6px 12px;
@@ -280,28 +283,14 @@
     /* ============================================================ */
     /* 🖥️ THEATER MODE: DEDICATED BIG SCREEN + BOTH FLOATING WEBCAMS */
     /* ============================================================ */
-    .video-viewport.theater-mode {
-      display: block; /* Switch from grid to full-stage relative container */
-      position: relative;
-      padding: 12px;
-    }
-
-    /* DEDICATED SCREEN CARD (BIG DISPLAY IN CENTER) */
     #screenCard {
       display: none;
-      width: 100%;
-      height: 100%;
       background: #020617;
-      border-radius: 18px;
+      border-radius: 20px;
       border: 2px solid rgba(139, 92, 246, 0.5);
       box-shadow: 0 0 50px rgba(139, 92, 246, 0.25);
       position: relative;
       overflow: hidden;
-      z-index: 1;
-    }
-
-    .video-viewport.theater-mode #screenCard {
-      display: flex;
     }
 
     #screenCard video {
@@ -309,46 +298,48 @@
       height: 100%;
       object-fit: contain !important; /* Never crop shared screen details */
       background: #000;
-      border-radius: 16px;
+      border-radius: 18px;
     }
 
-    /* FLOATING WEBCAMS CONTAINER */
-    .floating-webcams-dock {
-      display: none;
-      position: absolute;
-      top: 24px;
-      right: 24px;
-      flex-direction: column;
-      gap: 14px;
-      z-index: 30;
-      pointer-events: none;
+    .video-viewport.theater-mode {
+      display: block !important; /* Full stage */
+      position: relative;
+      padding: 12px;
     }
 
-    .video-viewport.theater-mode .floating-webcams-dock {
-      display: flex;
+    .video-viewport.theater-mode #screenCard {
+      display: flex !important;
+      width: 100% !important;
+      height: 100% !important;
+      z-index: 5;
     }
 
-    /* WEBCAM CARDS IN THEATER MODE */
-    .video-viewport.theater-mode #localCard,
+    /* WEBCAM 1: PARTNER CAMERA (FLOATING TOP-RIGHT) */
     .video-viewport.theater-mode #remoteCard {
-      pointer-events: auto;
-      width: 230px;
-      height: 145px;
-      border-radius: 14px;
-      border: 2px solid rgba(255, 255, 255, 0.15);
-      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.8);
-      background: #0f172a;
-      transition: all 0.25s ease;
+      position: absolute !important;
+      top: 24px !important;
+      right: 24px !important;
+      width: 230px !important;
+      height: 145px !important;
+      z-index: 35 !important;
+      border-radius: 14px !important;
+      border: 2.5px solid rgba(236, 72, 153, 0.8) !important;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.85), 0 0 15px rgba(236, 72, 153, 0.3) !important;
+      background: #0f172a !important;
     }
 
-    .video-viewport.theater-mode #remoteCard {
-      border-color: rgba(236, 72, 153, 0.7);
-      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.8), 0 0 15px rgba(236, 72, 153, 0.3);
-    }
-
+    /* WEBCAM 2: LOCAL CAMERA (FLOATING RIGHT BELOW PARTNER) */
     .video-viewport.theater-mode #localCard {
-      border-color: rgba(59, 130, 246, 0.7);
-      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.8), 0 0 15px rgba(59, 130, 246, 0.3);
+      position: absolute !important;
+      top: 180px !important;
+      right: 24px !important;
+      width: 230px !important;
+      height: 145px !important;
+      z-index: 35 !important;
+      border-radius: 14px !important;
+      border: 2.5px solid rgba(59, 130, 246, 0.8) !important;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.85), 0 0 15px rgba(59, 130, 246, 0.3) !important;
+      background: #0f172a !important;
     }
 
     .video-viewport.theater-mode #localCard:hover,
@@ -359,21 +350,22 @@
     .video-viewport.theater-mode .video-overlay {
       bottom: 8px;
       left: 8px;
-      padding: 3px 8px;
+      padding: 4px 8px;
       font-size: 11px;
     }
 
     @media (max-width: 768px) {
-      .floating-webcams-dock {
-        top: 14px;
-        right: 14px;
-        flex-direction: row;
-        gap: 8px;
-      }
-      .video-viewport.theater-mode #localCard,
       .video-viewport.theater-mode #remoteCard {
-        width: 120px;
-        height: 80px;
+        width: 120px !important;
+        height: 80px !important;
+        top: 14px !important;
+        right: 14px !important;
+      }
+      .video-viewport.theater-mode #localCard {
+        width: 120px !important;
+        height: 80px !important;
+        top: 102px !important;
+        right: 14px !important;
       }
     }
 
@@ -392,7 +384,7 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      z-index: 5;
+      z-index: 10;
       box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
     }
 
@@ -407,7 +399,7 @@
       background: rgba(9, 13, 22, 0.95);
       backdrop-filter: blur(16px);
       border-top: 1px solid var(--card-border);
-      z-index: 10;
+      z-index: 20;
     }
 
     .ctrl-btn {
@@ -486,7 +478,7 @@
       flex-direction: column;
       transition: transform 0.3s ease;
       position: relative;
-      z-index: 5;
+      z-index: 25;
     }
 
     .chat-drawer.hidden {
@@ -707,12 +699,12 @@
   <main>
     <div class="video-viewport" id="videoViewport">
       
-      <!-- DEDICATED SCREEN SHARE CARD (HUGE IN CENTER) -->
+      <!-- DEDICATED SCREEN SHARE CARD (HUGE DISPLAY IN CENTER) -->
       <div class="video-card" id="screenCard">
         <video id="screenVideo" autoplay playsinline></video>
         <div class="screen-indicator-tag">
           <span>🖥️</span>
-          <span id="screenIndicatorText">Screen Share Live (with Audio)</span>
+          <span id="screenIndicatorText">Screen Share Live (with Audio 🔊)</span>
         </div>
       </div>
 
@@ -744,12 +736,10 @@
           <span id="remoteMicBadge">🎙️</span>
         </div>
       </div>
-
-      <!-- FLOATING WEBCAMS DOCK (Active during Theater Mode) -->
-      <div class="floating-webcams-dock" id="floatingWebcamsDock">
-        <!-- In Theater Mode, localCard and remoteCard visually sit inside this dock via CSS positioning -->
-      </div>
     </div>
+
+    <!-- Hidden audio element for dedicated screen audio playback if needed -->
+    <audio id="remoteScreenAudio" autoplay></audio>
 
     <!-- CHAT DRAWER -->
     <aside class="chat-drawer" id="chatDrawer">
@@ -839,7 +829,7 @@
     let activeDataConn = null;       // Data Connection for Chat & Sync
     let partnerPeerId = null;        // Remote Partner Peer ID
     
-    let screenPeer = null;           // Secondary Peer for dedicated Screen Stream
+    let screenPeer = null;           // Pre-connected Screen Peer
     let activeScreenCall = null;     // Secondary Screen WebRTC Call
 
     let unreadCount = 0;
@@ -848,9 +838,9 @@
 
     // Unique peer IDs
     const randomSuffix = Math.random().toString(36).substring(2, 8);
-    const myPeerId = `us_${roomId}_${randomSuffix}`;
-    const myScreenPeerId = `us_${roomId}_screen_${randomSuffix}`;
-    console.log('[Us] Starting with Peer ID:', myPeerId);
+    const myPeerId = `us_${roomId}_cam_${randomSuffix}`;
+    const myScreenPeerId = `us_${roomId}_scr_${randomSuffix}`;
+    console.log('[Us] Initializing with Cam ID:', myPeerId, 'and Screen ID:', myScreenPeerId);
 
     // 3. UI ELEMENTS
     const videoViewport = document.getElementById('videoViewport');
@@ -922,11 +912,12 @@
       }
     };
 
-    function startPeer() {
+    function startPeers() {
+      // 1. Primary Webcam Peer
       peer = new Peer(myPeerId, peerConfig);
 
       peer.on('open', (id) => {
-        console.log('[PeerJS] Online as:', id);
+        console.log('[PeerJS] Cam Online as:', id);
         statusText.innerText = 'Waiting for partner...';
         startSignaling();
       });
@@ -935,19 +926,29 @@
       peer.on('call', (call) => {
         console.log('[PeerJS] Incoming call from:', call.peer);
 
-        if (call.peer.includes('_screen_')) {
-          // THIS IS A DEDICATED SCREEN SHARE STREAM FROM PARTNER
+        if (call.peer.includes('_scr_')) {
+          // THIS IS A DEDICATED SCREEN SHARE CALL FROM PARTNER!
           activeScreenCall = call;
-          call.answer(); // Receive-only answer
+          call.answer(new MediaStream()); // Answer with empty stream
           call.on('stream', (incomingScreenStream) => {
-            console.log('[ScreenCall] Received remote screen stream with audio tracks:', incomingScreenStream.getAudioTracks().length);
+            console.log('[ScreenCall] Received remote screen stream! Video tracks:', incomingScreenStream.getVideoTracks().length, 'Audio tracks:', incomingScreenStream.getAudioTracks().length);
+            
+            // 1. Play Video
             screenVideo.srcObject = incomingScreenStream;
-            screenVideo.muted = false;
-            screenVideo.volume = 1.0;
-            screenVideo.play().catch(e => {
-              console.warn('[ScreenAudio Autoplay] Need unlock:', e);
-              document.getElementById('audioUnlock').style.display = 'block';
-            });
+            screenVideo.muted = true; // Video plays guaranteed without browser block
+            screenVideo.play().catch(e => console.warn('[Screen Video Play]', e));
+
+            // 2. Play Audio directly if present
+            const audioTracks = incomingScreenStream.getAudioTracks();
+            if (audioTracks.length > 0) {
+              const remoteScreenAudio = document.getElementById('remoteScreenAudio');
+              remoteScreenAudio.srcObject = new MediaStream(audioTracks);
+              remoteScreenAudio.play().catch(e => {
+                console.warn('[Screen Audio Play Blocked]', e);
+                document.getElementById('audioUnlock').style.display = 'block';
+              });
+            }
+
             handleRemoteScreenShareChange(true);
           });
           call.on('close', () => {
@@ -960,10 +961,10 @@
           call.answer(localStream);
           attachCallEvents(call);
 
-          // If I was already sharing screen when partner called, call partner with screen stream!
+          // If I was ALREADY sharing screen when partner joined, connect screen to them immediately!
           if (isScreenSharing && screenStream) {
             setTimeout(() => {
-              sendScreenToPartner(call.peer);
+              dispatchScreenToPartner(call.peer);
             }, 1000);
           }
         }
@@ -971,14 +972,23 @@
 
       // Handle Incoming Data Connection
       peer.on('connection', (conn) => {
-        console.log('[PeerJS] Data connection established with:', conn.peer);
+        console.log('[PeerJS] Data channel connected with:', conn.peer);
         activeDataConn = conn;
         partnerPeerId = conn.peer;
         attachDataEvents(conn);
       });
 
       peer.on('error', (err) => {
-        console.error('[PeerJS] Error:', err);
+        console.error('[PeerJS Cam] Error:', err);
+      });
+
+      // 2. Pre-connect Screen Peer so it's instant when clicking Share Screen
+      screenPeer = new Peer(myScreenPeerId, peerConfig);
+      screenPeer.on('open', (id) => {
+        console.log('[PeerJS] Screen Peer Online as:', id);
+      });
+      screenPeer.on('error', (err) => {
+        console.error('[PeerJS Screen] Error:', err);
       });
     }
 
@@ -1064,7 +1074,7 @@
 
     // 6. SIGNALING WITH DETERMINISTIC ROLE NEGOTIATION
     function startSignaling() {
-      const topic = `us_app_v4/rooms/${roomId}`;
+      const topic = `us_app_v5/rooms/${roomId}`;
       const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
         clientId: 'us_mqtt_' + myPeerId,
         clean: true,
@@ -1101,9 +1111,9 @@
             console.log('[Negotiation] I am CALLEE, waiting for call from:', msg.peerId);
           }
 
-          // If partner is already in room and I am sharing screen, connect screen!
+          // If partner joined and I am already sharing screen, connect screen to them!
           if (isScreenSharing && screenStream && partnerPeerId) {
-            sendScreenToPartner(partnerPeerId);
+            dispatchScreenToPartner(partnerPeerId);
           }
         } catch (e) {
           console.error('[MQTT] Parse error:', e);
@@ -1139,10 +1149,10 @@
         attachDataEvents(conn);
       }
 
-      // If I am currently sharing screen, send screen stream as well!
+      // If already sharing screen when calling, send screen call as well
       if (isScreenSharing && screenStream) {
         setTimeout(() => {
-          sendScreenToPartner(targetPeerId);
+          dispatchScreenToPartner(targetPeerId);
         }, 1200);
       }
     }
@@ -1150,24 +1160,22 @@
     // ============================================================
     // 🖥️ DEDICATED SCREEN SHARE DISPATCHER & AUDIO MIXER
     // ============================================================
-    function sendScreenToPartner(targetPeerId) {
+    function dispatchScreenToPartner(targetPeerId) {
       if (!screenStream || !targetPeerId) return;
 
       if (!screenPeer || screenPeer.destroyed) {
         screenPeer = new Peer(myScreenPeerId, peerConfig);
         screenPeer.on('open', () => {
           console.log('[ScreenPeer] Calling partner with screen stream...');
-          const sCall = screenPeer.call(targetPeerId, screenStream);
-          activeScreenCall = sCall;
+          activeScreenCall = screenPeer.call(targetPeerId, screenStream);
         });
       } else {
         console.log('[ScreenPeer] Calling partner with screen stream...');
-        const sCall = screenPeer.call(targetPeerId, screenStream);
-        activeScreenCall = sCall;
+        activeScreenCall = screenPeer.call(targetPeerId, screenStream);
       }
     }
 
-    // Mix Screen Audio + Mic Audio so Partner Hears Both seamlessly
+    // Mix Screen Audio + Mic Audio so Partner Hears Both via Primary Audio Stream
     function mixScreenAudioIntoPrimaryCall() {
       try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -1178,17 +1186,17 @@
 
         const dest = audioContext.createMediaStreamDestination();
 
-        // 1. Add Mic
+        // 1. Connect Microphone
         if (localStream && localStream.getAudioTracks().length > 0) {
           const micSource = audioContext.createMediaStreamSource(localStream);
           micSource.connect(dest);
         }
 
-        // 2. Add Screen System/Tab Audio
+        // 2. Connect Screen System/Tab Audio
         if (screenStream && screenStream.getAudioTracks().length > 0) {
           const screenAudioSource = audioContext.createMediaStreamSource(screenStream);
           screenAudioSource.connect(dest);
-          console.log("[AudioMixer] Screen audio connected to primary call stream!");
+          console.log("[AudioMixer] Screen audio track connected to primary mixer!");
         }
 
         const mixedTrack = dest.stream.getAudioTracks()[0];
@@ -1222,9 +1230,9 @@
       if (isScreenSharing || isRemoteScreenSharing) {
         videoViewport.classList.add('theater-mode');
         if (isScreenSharing) {
-          screenIndicatorText.innerText = 'You are sharing your screen (with Audio) 🖥️';
+          screenIndicatorText.innerText = 'You are sharing screen (with Audio 🔊)';
         } else {
-          screenIndicatorText.innerText = 'Partner is sharing their screen (with Audio) 🖥️';
+          screenIndicatorText.innerText = 'Partner is sharing screen (with Audio 🔊)';
         }
       } else {
         videoViewport.classList.remove('theater-mode');
@@ -1234,10 +1242,11 @@
     function handleRemoteScreenShareChange(remoteIsSharing) {
       isRemoteScreenSharing = remoteIsSharing;
       if (remoteIsSharing) {
-        showToast('Partner started screen sharing 🖥️');
+        showToast('Partner started screen sharing 🖥️🔊');
       } else {
         showToast('Partner stopped screen sharing');
         screenVideo.srcObject = null;
+        document.getElementById('remoteScreenAudio').srcObject = null;
       }
       updateTheaterLayout();
     }
@@ -1285,7 +1294,7 @@
       const btn = document.getElementById('screenBtn');
       if (!isScreenSharing) {
         try {
-          showToast('💡 YouTube/Movies sound ke liye "Chrome Tab" chunein aur "Share tab audio" check rakhein!');
+          showToast('💡 Audio ke liye: "Chrome Tab" chunein aur "Also share tab audio" ON rakhein!');
 
           screenStream = await navigator.mediaDevices.getDisplayMedia({
             video: {
@@ -1297,8 +1306,17 @@
               noiseSuppression: false,
               autoGainControl: false,
               suppressLocalAudioPlayback: false
-            }
+            },
+            systemAudio: "include"
           });
+
+          // Check if audio track was included
+          const hasAudio = screenStream.getAudioTracks().length > 0;
+          if (!hasAudio) {
+            showToast('⚠️ Screen Audio include nahi hua! Sound ke liye "Chrome Tab" chunein aur "Share tab audio" check karein.');
+          } else {
+            showToast('Screen sharing started with Audio 🖥️🔊');
+          }
 
           // Show screen locally on the Big Screen Card
           screenVideo.srcObject = screenStream;
@@ -1307,16 +1325,15 @@
 
           isScreenSharing = true;
           btn.classList.add('active-screen');
-          showToast('Screen sharing started with Audio 🖥️🔊');
 
           // 1. Mix Screen Audio into primary call for zero-latency audio
-          if (screenStream.getAudioTracks().length > 0) {
+          if (hasAudio) {
             mixScreenAudioIntoPrimaryCall();
           }
 
           // 2. Call partner with dedicated screen stream
           if (partnerPeerId) {
-            sendScreenToPartner(partnerPeerId);
+            dispatchScreenToPartner(partnerPeerId);
           }
 
           // 3. Notify partner via DataChannel
@@ -1327,7 +1344,7 @@
           // 4. Update Theater Layout
           updateTheaterLayout();
 
-          // Handle when user clicks browser's native "Stop Sharing" floating button
+          // Handle when user clicks browser's native "Stop Sharing" floating bar
           screenStream.getVideoTracks()[0].onended = () => {
             stopScreenSharing();
           };
@@ -1354,10 +1371,6 @@
         activeScreenCall.close();
         activeScreenCall = null;
       }
-      if (screenPeer) {
-        screenPeer.destroy();
-        screenPeer = null;
-      }
 
       screenVideo.srcObject = null;
       document.getElementById('screenBtn').classList.remove('active-screen');
@@ -1382,12 +1395,13 @@
     function unlockAudio() {
       remoteVideo.muted = false;
       remoteVideo.play();
-      if (screenVideo.srcObject) {
-        screenVideo.muted = false;
-        screenVideo.play();
+      const rScreenAudio = document.getElementById('remoteScreenAudio');
+      if (rScreenAudio && rScreenAudio.srcObject) {
+        rScreenAudio.muted = false;
+        rScreenAudio.play();
       }
       document.getElementById('audioUnlock').style.display = 'none';
-      showToast('Audio unmuted! 🔊');
+      showToast('Audio enabled! 🔊');
     }
 
     // 8. CHAT & REACTIONS
@@ -1469,11 +1483,11 @@
       setTimeout(() => toast.classList.remove('show'), 3500);
     }
 
-    // START FLOW: MEDIA FIRST -> THEN PEER & SIGNALING
+    // START FLOW: MEDIA FIRST -> THEN PRE-CONNECT BOTH PEERS & SIGNALING
     async function startApp() {
       statusText.innerText = 'Requesting Camera/Mic...';
       await initMedia();
-      startPeer();
+      startPeers();
     }
 
     startApp();
