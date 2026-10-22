@@ -76,6 +76,12 @@
       letter-spacing: -0.5px;
     }
 
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
     .room-badge-group {
       display: flex;
       align-items: center;
@@ -111,6 +117,26 @@
     .copy-btn:hover {
       background: rgba(167, 139, 250, 0.15);
       color: #c4b5fd;
+    }
+
+    .netmirror-guide-btn {
+      background: rgba(236, 72, 153, 0.15);
+      border: 1px solid rgba(236, 72, 153, 0.4);
+      color: #f472b6;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .netmirror-guide-btn:hover {
+      background: rgba(236, 72, 153, 0.25);
+      transform: translateY(-1px);
     }
 
     .status-indicator {
@@ -296,13 +322,13 @@
     #screenCard video {
       width: 100%;
       height: 100%;
-      object-fit: contain !important; /* Never crop shared screen details */
+      object-fit: contain !important; /* Never crop movie or shared screen */
       background: #000;
       border-radius: 18px;
     }
 
     .video-viewport.theater-mode {
-      display: block !important; /* Full stage */
+      display: block !important;
       position: relative;
       padding: 12px;
     }
@@ -672,6 +698,85 @@
       cursor: pointer;
       box-shadow: 0 6px 25px rgba(139, 92, 246, 0.5);
     }
+
+    /* MODAL FOR NETMIRROR / MOVIES FIX */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 300;
+      padding: 20px;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #111827;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      max-width: 500px;
+      width: 100%;
+      padding: 24px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(236, 72, 153, 0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+    }
+
+    .modal-box h3 {
+      font-size: 18px;
+      font-weight: 800;
+      background: var(--gradient-pink);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .guide-step {
+      display: flex;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .guide-num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      font-weight: 700;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .guide-text {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #e2e8f0;
+    }
+
+    .guide-text code {
+      background: rgba(236, 72, 153, 0.2);
+      color: #f472b6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
   </style>
 </head>
 <body>
@@ -682,16 +787,22 @@
       <span class="brand-logo">Us.</span>
     </a>
 
-    <div class="room-badge-group">
-      <span class="room-code-tag" id="roomCodeDisplay">ROOM: ----</span>
-      <button class="copy-btn" onclick="copyRoomLink()" title="Copy invite link">
-        📋 <span>Copy Link</span>
+    <div class="header-actions">
+      <button class="netmirror-guide-btn" onclick="openNetmirrorModal()" title="Fix NetMirror / Netflix Black Screen">
+        🎬 <span>NetMirror Movie Fix</span>
       </button>
-    </div>
 
-    <div class="status-indicator">
-      <span class="dot" id="statusDot"></span>
-      <span id="statusText">Starting Camera...</span>
+      <div class="room-badge-group">
+        <span class="room-code-tag" id="roomCodeDisplay">ROOM: ----</span>
+        <button class="copy-btn" onclick="copyRoomLink()" title="Copy invite link">
+          📋 <span>Copy Link</span>
+        </button>
+      </div>
+
+      <div class="status-indicator">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusText">Starting Camera...</span>
+      </div>
     </div>
   </header>
 
@@ -781,6 +892,11 @@
       <svg id="camIconOff" viewBox="0 0 24 24" style="display:none;"><path d="M21 6.5l-4 4V7c0-.55-.45-1-1-1H9.82L21 17.18V6.5zM3.27 2L2 3.27 4.73 6H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.21 0 .39-.08.54-.18L19.73 21 21 19.73 3.27 2z"/></svg>
     </button>
 
+    <!-- Mirror / Flip Camera Toggle -->
+    <button class="ctrl-btn" id="flipBtn" onclick="toggleMirror()" title="Flip/Mirror Camera">
+      <svg viewBox="0 0 24 24"><path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/></svg>
+    </button>
+
     <!-- Screen Share Toggle -->
     <button class="ctrl-btn" id="screenBtn" onclick="toggleScreenShare()" title="Share Screen with Audio">
       <svg viewBox="0 0 24 24"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.11-.9-2-2-2H4c-1.11 0-2 .89-2 2v10c0 1.1.89 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>
@@ -797,6 +913,49 @@
       <svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
     </button>
   </footer>
+
+  <!-- NETMIRROR / MOVIES FIX MODAL -->
+  <div class="modal-overlay" id="netmirrorModal">
+    <div class="modal-box">
+      <h3>🎬 NetMirror / Movies Screen Share Fix</h3>
+      <p style="font-size: 13px; color: var(--text-dim); line-height: 1.5;">
+        Jab aap NetMirror, Netflix ya Prime Video share karte hain aur samne wale ko <b>Black Screen / Blank video</b> dikhta hai, toh ye Chrome ki <b>Hardware Acceleration</b> ki wajah se hota hai. Isko 1 minute me aise fix karein:
+      </p>
+
+      <div class="guide-step">
+        <div class="guide-num">1</div>
+        <div class="guide-text">
+          Apne Chrome me naya tab kholiye aur address bar me paste karke Enter dabayein:<br>
+          <code>chrome://settings/system</code>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-num">2</div>
+        <div class="guide-text">
+          Wahan <b>"Use graphics acceleration when available"</b> (Hardware Acceleration) ko <b>OFF (Disable)</b> kar dijiye.
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-num">3</div>
+        <div class="guide-text">
+          Chrome me <b>"Relaunch"</b> button par click karke browser restart karein.
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="guide-num">4</div>
+        <div class="guide-text">
+          Wapas yahan aakar Screen Share karein aur <b>"Chrome Tab"</b> (NetMirror wala tab) select karein aur <b>"Also share tab audio"</b> check rakhein!
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 8px;">
+        <button class="send-btn" style="padding: 10px 24px; border-radius: 9999px;" onclick="closeNetmirrorModal()">Theek hai, Samajh gaya!</button>
+      </div>
+    </div>
+  </div>
 
   <div id="toast" class="toast">Link copied!</div>
 
@@ -823,6 +982,7 @@
     let isRemoteScreenSharing = false; // Is partner sharing screen?
     let isMicMuted = false;
     let isCamOff = false;
+    let isMirrored = true;
     
     let peer = null;                 // Primary Peer for Webcam + Voice
     let activeCall = null;           // Primary WebRTC Call
@@ -856,6 +1016,14 @@
     const statusText = document.getElementById('statusText');
     const unreadBadge = document.getElementById('unreadBadge');
     const screenIndicatorText = document.getElementById('screenIndicatorText');
+
+    function openNetmirrorModal() {
+      document.getElementById('netmirrorModal').classList.add('open');
+    }
+
+    function closeNetmirrorModal() {
+      document.getElementById('netmirrorModal').classList.remove('open');
+    }
 
     // 4. GUARANTEED MEDIA INITIALIZATION
     async function initMedia() {
@@ -929,13 +1097,13 @@
         if (call.peer.includes('_scr_')) {
           // THIS IS A DEDICATED SCREEN SHARE CALL FROM PARTNER!
           activeScreenCall = call;
-          call.answer(new MediaStream()); // Answer with empty stream
+          call.answer(new MediaStream());
           call.on('stream', (incomingScreenStream) => {
             console.log('[ScreenCall] Received remote screen stream! Video tracks:', incomingScreenStream.getVideoTracks().length, 'Audio tracks:', incomingScreenStream.getAudioTracks().length);
             
             // 1. Play Video
             screenVideo.srcObject = incomingScreenStream;
-            screenVideo.muted = true; // Video plays guaranteed without browser block
+            screenVideo.muted = true;
             screenVideo.play().catch(e => console.warn('[Screen Video Play]', e));
 
             // 2. Play Audio directly if present
@@ -961,7 +1129,6 @@
           call.answer(localStream);
           attachCallEvents(call);
 
-          // If I was ALREADY sharing screen when partner joined, connect screen to them immediately!
           if (isScreenSharing && screenStream) {
             setTimeout(() => {
               dispatchScreenToPartner(call.peer);
@@ -1098,7 +1265,7 @@
       client.on('message', (t, payload) => {
         try {
           const msg = JSON.parse(payload.toString());
-          if (msg.peerId === myPeerId) return; // Ignore own messages
+          if (msg.peerId === myPeerId) return;
 
           console.log('[MQTT] Received signal from:', msg.peerId);
 
@@ -1111,7 +1278,6 @@
             console.log('[Negotiation] I am CALLEE, waiting for call from:', msg.peerId);
           }
 
-          // If partner joined and I am already sharing screen, connect screen to them!
           if (isScreenSharing && screenStream && partnerPeerId) {
             dispatchScreenToPartner(partnerPeerId);
           }
@@ -1149,7 +1315,6 @@
         attachDataEvents(conn);
       }
 
-      // If already sharing screen when calling, send screen call as well
       if (isScreenSharing && screenStream) {
         setTimeout(() => {
           dispatchScreenToPartner(targetPeerId);
@@ -1251,7 +1416,7 @@
       updateTheaterLayout();
     }
 
-    // 7. MIC, CAMERA & SCREEN SHARE CONTROLS
+    // 7. CONTROLS (MIC, CAM, MIRROR, SCREEN SHARE)
     function toggleMic() {
       if (!localStream) return;
       const audioTrack = localStream.getAudioTracks()[0];
@@ -1290,37 +1455,55 @@
       }
     }
 
+    function toggleMirror() {
+      isMirrored = !isMirrored;
+      localVideo.classList.toggle('mirrored', isMirrored);
+      showToast(isMirrored ? 'Camera Mirrored (Selfie mode)' : 'Camera Un-mirrored (Original mode)');
+    }
+
+    // SCREEN SHARE WITH NETMIRROR & MOVIE OPTIMIZATIONS
     async function toggleScreenShare() {
       const btn = document.getElementById('screenBtn');
       if (!isScreenSharing) {
         try {
-          showToast('💡 Audio ke liye: "Chrome Tab" chunein aur "Also share tab audio" ON rakhein!');
+          showToast('🎬 NetMirror/Movies ke liye: "Chrome Tab" chunein aur "Share tab audio" ON rakhein!');
 
-          screenStream = await navigator.mediaDevices.getDisplayMedia({
-            video: {
-              cursor: "always",
-              displaySurface: "browser"
-            },
-            audio: {
-              echoCancellation: false,
-              noiseSuppression: false,
-              autoGainControl: false,
-              suppressLocalAudioPlayback: false
-            },
-            systemAudio: "include"
-          });
+          // Enhanced constraints with fallback for smooth movie streaming
+          try {
+            screenStream = await navigator.mediaDevices.getDisplayMedia({
+              video: {
+                cursor: "always",
+                frameRate: { ideal: 30, max: 60 }
+              },
+              audio: {
+                echoCancellation: false,
+                noiseSuppression: false,
+                autoGainControl: false,
+                suppressLocalAudioPlayback: false
+              }
+            });
+          } catch (e1) {
+            console.warn("[Screen] Standard options failed, falling back:", e1);
+            screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+          }
+
+          // Prioritize motion / smooth FPS for movie streaming (NetMirror)
+          const vTrack = screenStream.getVideoTracks()[0];
+          if (vTrack && 'contentHint' in vTrack) {
+            vTrack.contentHint = 'motion';
+          }
 
           // Check if audio track was included
           const hasAudio = screenStream.getAudioTracks().length > 0;
           if (!hasAudio) {
-            showToast('⚠️ Screen Audio include nahi hua! Sound ke liye "Chrome Tab" chunein aur "Share tab audio" check karein.');
+            showToast('⚠️ Audio include nahi hua! Sound ke liye "Chrome Tab" chunein aur "Share tab audio" check karein.');
           } else {
             showToast('Screen sharing started with Audio 🖥️🔊');
           }
 
           // Show screen locally on the Big Screen Card
           screenVideo.srcObject = screenStream;
-          screenVideo.muted = true; // Local user already hears system audio natively
+          screenVideo.muted = true;
           try { await screenVideo.play(); } catch (_) {}
 
           isScreenSharing = true;
@@ -1345,7 +1528,7 @@
           updateTheaterLayout();
 
           // Handle when user clicks browser's native "Stop Sharing" floating bar
-          screenStream.getVideoTracks()[0].onended = () => {
+          vTrack.onended = () => {
             stopScreenSharing();
           };
         } catch (err) {
